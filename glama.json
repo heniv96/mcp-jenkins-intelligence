@@ -1,4 +1,6 @@
 {
   "$schema": "https://glama.ai/mcp/schemas/server.json",
-  "maintainers": ["heniv96"]
+  "maintainers": [
+    "heniv96"
+  ]
 }
