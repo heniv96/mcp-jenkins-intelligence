@@ -7,6 +7,7 @@
 [![MCP](https://img.shields.io/badge/MCP-Protocol-green.svg)](https://modelcontextprotocol.io/)
 [![Stars](https://img.shields.io/github/stars/heniv96/mcp-jenkins-intelligence?style=social)](https://github.com/heniv96/mcp-jenkins-intelligence/stargazers)
 [![Issues](https://img.shields.io/github/issues/heniv96/mcp-jenkins-intelligence)](https://github.com/heniv96/mcp-jenkins-intelligence/issues)
+
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/heniv96/mcp-jenkins-intelligence/pulls)
 
 > **The Jenkins Intelligence Platform**  
