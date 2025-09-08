@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "jenkins-intelligence": {
+      "command": "python",
+      "args": [
+        "path/to/server.py"
+      ],
+      "env": {
+        "JENKINS_URL": "https://your-jenkins-server.com",
+        "JENKINS_USERNAME": "your-username",
+        "JENKINS_TOKEN": "youer-api-token"
+      }
+    }
+  }
+}
