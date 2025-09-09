@@ -8,9 +8,20 @@ def parse_timestamp(timestamp: int | None) -> datetime | None:
     """Parse Jenkins timestamp (milliseconds) to datetime."""
     if not timestamp:
         return None
+    
+    # Handle different timestamp formats
     try:
-        return datetime.fromtimestamp(timestamp / 1000)
-    except (ValueError, TypeError, OSError):
+        # If timestamp is already in seconds (unlikely but possible)
+        if timestamp < 1000000000:  # Less than year 2001 in seconds
+            return datetime.fromtimestamp(timestamp)
+        else:
+            # Assume milliseconds and convert to seconds
+            return datetime.fromtimestamp(timestamp / 1000)
+    except (ValueError, TypeError, OSError) as e:
+        # Log the error for debugging but don't raise
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to parse timestamp {timestamp}: {e}")
         return None
 
 
