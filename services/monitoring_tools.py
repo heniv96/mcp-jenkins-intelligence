@@ -32,7 +32,11 @@ class MonitoringTools:
             builds = self.jenkins.get_builds(pipeline_name, 100)  # Get more builds for better metrics
 
             # Filter builds by date
-            recent_builds = [b for b in builds if parse_timestamp(b.get("timestamp")) and parse_timestamp(b.get("timestamp")) >= cutoff_date]
+            recent_builds = []
+            for b in builds:
+                timestamp = parse_timestamp(b.get("timestamp"))
+                if timestamp and timestamp >= cutoff_date:
+                    recent_builds.append(b)
 
             if not recent_builds:
                 return {"error": f"No builds found in the {period} period"}
@@ -54,10 +58,20 @@ class MonitoringTools:
 
             # Calculate build frequency
             if len(recent_builds) > 1:
-                first_build = min(recent_builds, key=lambda x: x.get("timestamp", 0))
-                last_build = max(recent_builds, key=lambda x: x.get("timestamp", 0))
-                time_span = (parse_timestamp(last_build.get("timestamp")) - parse_timestamp(first_build.get("timestamp"))).total_seconds() / 3600  # hours
-                builds_per_day = (total_builds / time_span) * 24 if time_span > 0 else 0
+                # Get builds with valid timestamps for time span calculation
+                valid_timestamp_builds = [b for b in recent_builds if parse_timestamp(b.get("timestamp"))]
+                if len(valid_timestamp_builds) > 1:
+                    first_build = min(valid_timestamp_builds, key=lambda x: parse_timestamp(x.get("timestamp")))
+                    last_build = max(valid_timestamp_builds, key=lambda x: parse_timestamp(x.get("timestamp")))
+                    first_time = parse_timestamp(first_build.get("timestamp"))
+                    last_time = parse_timestamp(last_build.get("timestamp"))
+                    if first_time and last_time:
+                        time_span = (last_time - first_time).total_seconds() / 3600  # hours
+                        builds_per_day = (total_builds / time_span) * 24 if time_span > 0 else 0
+                    else:
+                        builds_per_day = 0
+                else:
+                    builds_per_day = 0
             else:
                 builds_per_day = 0
 
@@ -177,7 +191,11 @@ class MonitoringTools:
             for pipeline_name in pipeline_names:
                 await ctx.info(f"Analyzing {pipeline_name}...")
                 builds = self.jenkins.get_builds(pipeline_name, 50)
-                recent_builds = [b for b in builds if parse_timestamp(b.get("timestamp")) and parse_timestamp(b.get("timestamp")) >= cutoff_date]
+                recent_builds = []
+                for b in builds:
+                    timestamp = parse_timestamp(b.get("timestamp"))
+                    if timestamp and timestamp >= cutoff_date:
+                        recent_builds.append(b)
 
                 if recent_builds:
                     successful = len([b for b in recent_builds if b.get("result") == "SUCCESS"])
