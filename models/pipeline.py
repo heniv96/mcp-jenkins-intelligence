@@ -25,7 +25,7 @@ class BuildInfo(BaseModel):
     status: str
     url: str
     duration: int | None = None  # in milliseconds
-    timestamp: datetime
+    timestamp: datetime | None = None
     description: str = ""
 
 
