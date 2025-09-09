@@ -217,26 +217,73 @@ class CoreTools:
             await ctx.info("Fetching build data from Jenkins...")
             builds_data = self.jenkins.get_builds(pipeline_name, limit)
             builds = []
+            skipped_builds = 0
 
             for i, build_data in enumerate(builds_data):
-                build_status = build_data.get("result", "UNKNOWN")
+                try:
+                    build_number = build_data.get("number")
+                    if not build_number:
+                        await ctx.warning(f"Skipping build with missing number: {build_data}")
+                        skipped_builds += 1
+                        continue
 
-                if status and build_status != status:
+                    # Get detailed build information
+                    await ctx.info(f"Fetching details for build #{build_number}...")
+                    try:
+                        detailed_build = self.jenkins.get_build_info(pipeline_name, build_number)
+                    except Exception as detail_error:
+                        await ctx.warning(f"Could not get details for build #{build_number}: {str(detail_error)}")
+                        # Fall back to basic build data
+                        detailed_build = build_data
+
+                    # Extract build information with fallbacks
+                    build_status = detailed_build.get("result") or build_data.get("result") or "UNKNOWN"
+                    
+                    # Handle different status representations
+                    if build_status == "null" or build_status is None:
+                        build_status = "UNKNOWN"
+                    
+                    # Check if build is still running
+                    if detailed_build.get("building", False):
+                        build_status = "RUNNING"
+
+                    if status and build_status != status:
+                        continue
+
+                    # Parse timestamp and handle invalid timestamps gracefully
+                    timestamp = parse_timestamp(detailed_build.get("timestamp") or build_data.get("timestamp"))
+                    if timestamp is None and (detailed_build.get("timestamp") or build_data.get("timestamp")):
+                        await ctx.warning(f"Build #{build_number} has invalid timestamp, but including with null timestamp...")
+
+                    # Get duration (convert from milliseconds to seconds if needed)
+                    duration = detailed_build.get("duration") or build_data.get("duration")
+                    if duration and duration > 0:
+                        # Duration is typically in milliseconds, convert to seconds for display
+                        duration_seconds = duration / 1000 if duration > 1000 else duration
+                    else:
+                        duration_seconds = None
+
+                    build = BuildInfo(
+                        number=build_number,
+                        status=build_status,
+                        url=detailed_build.get("url") or build_data.get("url", ""),
+                        duration=duration,
+                        timestamp=timestamp,
+                        description=detailed_build.get("description") or build_data.get("description", ""),
+                    )
+                    builds.append(build)
+
+                    # Report progress every 3 builds (since we're doing more work per build)
+                    if (i + 1) % 3 == 0:
+                        await ctx.report_progress(i + 1, len(builds_data), f"Processed {i + 1} builds")
+
+                except Exception as build_error:
+                    await ctx.warning(f"Error processing build #{build_data.get('number', 'unknown')}: {str(build_error)}")
+                    skipped_builds += 1
                     continue
 
-                build = BuildInfo(
-                    number=build_data["number"],
-                    status=build_status,
-                    url=build_data["url"],
-                    duration=build_data.get("duration"),
-                    timestamp=parse_timestamp(build_data.get("timestamp")),
-                    description=build_data.get("description", ""),
-                )
-                builds.append(build)
-
-                # Report progress every 5 builds
-                if (i + 1) % 5 == 0:
-                    await ctx.report_progress(i + 1, len(builds_data), f"Processed {i + 1} builds")
+            if skipped_builds > 0:
+                await ctx.warning(f"Skipped {skipped_builds} builds due to errors or missing data")
 
             await ctx.info(f"Retrieved {len(builds)} builds for pipeline: {pipeline_name}")
             return builds
