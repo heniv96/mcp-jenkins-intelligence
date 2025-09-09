@@ -58,7 +58,13 @@ class JenkinsService:
         """Get build information."""
         if not self.client:
             raise ValueError("Jenkins not initialized")
-        return self.client.get_build_info(job_name, build_number)
+        try:
+            build_info = self.client.get_build_info(job_name, build_number)
+            logger.debug(f"Retrieved build info for {job_name}#{build_number}: {build_info.get('result', 'UNKNOWN')}")
+            return build_info
+        except Exception as e:
+            logger.warning(f"Failed to get build info for {job_name}#{build_number}: {e}")
+            raise
 
     def get_build_console_output(self, job_name: str, build_number: int) -> str:
         """Get build console output."""
@@ -110,3 +116,23 @@ class JenkinsService:
         if not self.client:
             raise ValueError("Jenkins not initialized")
         return self.client.get_whoami()
+
+    def get_build_status(self, job_name: str, build_number: int) -> str:
+        """Get build status efficiently."""
+        if not self.client:
+            raise ValueError("Jenkins not initialized")
+        try:
+            build_info = self.client.get_build_info(job_name, build_number)
+            result = build_info.get("result")
+            
+            # Handle different status representations
+            if result is None or result == "null":
+                if build_info.get("building", False):
+                    return "RUNNING"
+                else:
+                    return "UNKNOWN"
+            
+            return result
+        except Exception as e:
+            logger.warning(f"Failed to get build status for {job_name}#{build_number}: {e}")
+            return "UNKNOWN"
