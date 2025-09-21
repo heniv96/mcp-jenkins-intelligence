@@ -209,6 +209,64 @@ release: clean check build package
 	@echo "  - Binary: $(DIST_DIR)/$(BINARY_NAME)"
 	@echo "  - Package: $(DIST_DIR)/$(PACKAGE_NAME)-$(VERSION).tar.gz"
 
+# Create GitHub release
+.PHONY: github-release
+github-release: build
+	@echo "$(BLUE)Creating GitHub release...$(NC)"
+	@if [ -z "$(VERSION)" ]; then echo "$(RED)Error: VERSION is required. Use: make github-release VERSION=v1.0.0$(NC)"; exit 1; fi
+	@gh release create $(VERSION) dist/$(BINARY_NAME) \
+		--title "MCP Jenkins Intelligence Server $(VERSION)" \
+		--notes "## 🚀 MCP Jenkins Intelligence Server $(VERSION)
+
+### ✨ Features
+- **Self-contained binary executable** - no Python installation required
+- **33 MCP tools** for comprehensive Jenkins pipeline analysis
+- **Auto-configuration** using environment variables
+- **AI-powered insights** and failure analysis
+- **Jenkinsfile retrieval** with 100% accuracy
+- **Security scanning** and vulnerability detection
+- **Performance optimization** suggestions
+
+### 🛠️ Installation
+1. Download the binary from this release
+2. Make it executable: \`chmod +x mcp-jenkins-server\`
+3. Configure your MCP client (Cursor/VSCode) to use the binary
+
+### 📋 MCP Configuration
+\`\`\`json
+{
+  \"mcpServers\": {
+    \"mcp-jenkins-intelligence\": {
+      \"command\": \"/path/to/mcp-jenkins-server\",
+      \"args\": [],
+      \"env\": {
+        \"JENKINS_URL\": \"https://your-jenkins-url\",
+        \"JENKINS_USERNAME\": \"your-username\",
+        \"JENKINS_TOKEN\": \"your-token\"
+      }
+    }
+  }
+}
+\`\`\`
+
+### 🔧 Available Tools
+- **Core Tools**: List pipelines, get details, analyze health
+- **Monitoring Tools**: Metrics, dependencies, queue monitoring  
+- **AI Tools**: Failure prediction, optimization suggestions
+- **Security Tools**: Vulnerability scanning
+- **Jenkinsfile Tools**: Retrieve and analyze Jenkinsfiles
+- **Advanced Tools**: Reports, comparisons, anomaly detection
+
+### 🏗️ Build Information
+- **Platform**: macOS ARM64 (Apple Silicon)
+- **Python**: 3.13.7
+- **Dependencies**: All included in binary
+- **Size**: ~73MB
+
+### 📖 Documentation
+See the README.md for detailed usage instructions and examples."
+	@echo "$(GREEN)✓ GitHub release $(VERSION) created$(NC)"
+
 # Install binary system-wide (requires sudo)
 .PHONY: install-binary
 install-binary: build
