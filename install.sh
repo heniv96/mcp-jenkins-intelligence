@@ -18,8 +18,37 @@ BINARY_NAME="mcp-jenkins-server"
 INSTALL_DIR="${HOME}/.local/bin"
 CONFIG_DIR="${HOME}/.config"
 
+# Detect platform
+detect_platform() {
+    local os=$(uname -s)
+    local arch=$(uname -m)
+    
+    case "$os" in
+        Darwin)
+            case "$arch" in
+                arm64) echo "macos-arm64" ;;
+                x86_64) echo "macos-x86_64" ;;
+                *) echo "macos-arm64" ;; # Default to ARM64 for macOS
+            esac
+            ;;
+        Linux)
+            case "$arch" in
+                x86_64|amd64) echo "linux-amd64" ;;
+                aarch64|arm64) echo "linux-arm64" ;;
+                *) echo "linux-amd64" ;; # Default to AMD64 for Linux
+            esac
+            ;;
+        *)
+            echo "linux-amd64" ;; # Default to Linux AMD64
+            ;;
+    esac
+}
+
+PLATFORM=$(detect_platform)
+
 echo -e "${BLUE}🚀 MCP Jenkins Intelligence Server - Installer${NC}"
 echo "=================================================="
+echo -e "${BLUE}🔍 Detected platform: ${PLATFORM}${NC}"
 
 # Check if curl is available
 if ! command -v curl &> /dev/null; then
@@ -36,19 +65,23 @@ else
     LATEST_TAG=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | jq -r .tag_name)
 fi
 
-echo -e "${BLUE}📦 Downloading ${BINARY_NAME} v${LATEST_TAG}...${NC}"
+echo -e "${BLUE}📦 Downloading ${BINARY_NAME}-${PLATFORM} v${LATEST_TAG}...${NC}"
 
 # Create install directory if it doesn't exist
 mkdir -p "${INSTALL_DIR}"
 
-# Download the binary
-DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${BINARY_NAME}"
-curl -L -o "${INSTALL_DIR}/${BINARY_NAME}" "${DOWNLOAD_URL}"
+# Download the platform-specific binary
+DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${BINARY_NAME}-${PLATFORM}"
+curl -L -o "${INSTALL_DIR}/${BINARY_NAME}-${PLATFORM}" "${DOWNLOAD_URL}"
 
 # Make it executable
-chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
+chmod +x "${INSTALL_DIR}/${BINARY_NAME}-${PLATFORM}"
+
+# Create a symlink for easier usage
+ln -sf "${INSTALL_DIR}/${BINARY_NAME}-${PLATFORM}" "${INSTALL_DIR}/${BINARY_NAME}"
 
 echo -e "${GREEN}✅ Binary downloaded and installed to ${INSTALL_DIR}/${BINARY_NAME}${NC}"
+echo -e "${GREEN}   Platform-specific binary: ${INSTALL_DIR}/${BINARY_NAME}-${PLATFORM}${NC}"
 
 # Check if the binary is in PATH
 if [[ ":$PATH:" != *":${INSTALL_DIR}:"* ]]; then
@@ -81,6 +114,11 @@ echo -e "${GREEN}✅ Example configuration created at ${CONFIG_DIR}/mcp-jenkins-
 
 echo ""
 echo -e "${GREEN}🎉 Installation complete!${NC}"
+echo ""
+echo -e "${BLUE}Installed:${NC}"
+echo "  - Binary: ${INSTALL_DIR}/${BINARY_NAME} (symlink)"
+echo "  - Platform-specific: ${INSTALL_DIR}/${BINARY_NAME}-${PLATFORM}"
+echo "  - Platform: ${PLATFORM}"
 echo ""
 echo -e "${BLUE}Next steps:${NC}"
 echo "1. Update your MCP client configuration (Cursor/VSCode) with the path:"

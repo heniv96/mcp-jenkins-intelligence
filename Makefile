@@ -84,10 +84,10 @@ lint:
 	mypy .
 	@echo "$(GREEN)✓ Linting passed$(NC)"
 
-# Build binary executable
+# Build binary executable for current platform
 .PHONY: build
 build: clean install
-	@echo "$(BLUE)Building binary executable...$(NC)"
+	@echo "$(BLUE)Building binary executable for current platform...$(NC)"
 	$(PYINSTALLER) --onefile \
 		--name $(BINARY_NAME) \
 		--add-data "prompts:prompts" \
@@ -135,6 +135,117 @@ build: clean install
 	rm -f $(SPEC_FILE)
 	@echo "$(GREEN)✓ Binary built successfully$(NC)"
 	@echo "$(YELLOW)Binary location: $(DIST_DIR)/$(BINARY_NAME)$(NC)"
+
+# Build for macOS ARM64 (Apple Silicon)
+.PHONY: build-macos-arm64
+build-macos-arm64: clean install
+	@echo "$(BLUE)Building binary for macOS ARM64...$(NC)"
+	$(PYINSTALLER) --onefile \
+		--name $(BINARY_NAME)-macos-arm64 \
+		--add-data "prompts:prompts" \
+		--add-data "resources:resources" \
+		--add-data "models:models" \
+		--add-data "utils:utils" \
+		--add-data "services:services" \
+		--add-data "config:config" \
+		--hidden-import="fastmcp" \
+		--hidden-import="jenkins" \
+		--hidden-import="pydantic" \
+		--hidden-import="requests" \
+		--hidden-import="numpy" \
+		--hidden-import="sklearn" \
+		--hidden-import="sklearn.ensemble" \
+		--hidden-import="sklearn.ensemble.IsolationForest" \
+		--hidden-import="sklearn.cluster" \
+		--hidden-import="sklearn.metrics" \
+		--hidden-import="sklearn.linear_model" \
+		--hidden-import="sklearn.neighbors" \
+		--hidden-import="sklearn.tree" \
+		--hidden-import="pandas" \
+		--hidden-import="plotly" \
+		--hidden-import="openai" \
+		--hidden-import="anthropic" \
+		--hidden-import="anyio" \
+		--hidden-import="click" \
+		--hidden-import="tenacity" \
+		--hidden-import="croniter" \
+		--hidden-import="uvicorn" \
+		--hidden-import="starlette" \
+		--hidden-import="fastapi" \
+		--hidden-import="httpx" \
+		--hidden-import="jinja2" \
+		--hidden-import="rich" \
+		--hidden-import="tabulate" \
+		--hidden-import="python-dateutil" \
+		--hidden-import="scipy" \
+		--hidden-import="importlib_metadata" \
+		--collect-all="fastmcp" \
+		--collect-all="importlib_metadata" \
+		server.py
+	@echo "$(BLUE)Cleaning up build artifacts...$(NC)"
+	rm -rf $(BUILD_DIR)
+	rm -f $(SPEC_FILE)
+	@echo "$(GREEN)✓ macOS ARM64 binary built successfully$(NC)"
+	@echo "$(YELLOW)Binary location: $(DIST_DIR)/$(BINARY_NAME)-macos-arm64$(NC)"
+
+# Build for Linux AMD64
+.PHONY: build-linux-amd64
+build-linux-amd64: clean install
+	@echo "$(BLUE)Building binary for Linux AMD64...$(NC)"
+	$(PYINSTALLER) --onefile \
+		--name $(BINARY_NAME)-linux-amd64 \
+		--add-data "prompts:prompts" \
+		--add-data "resources:resources" \
+		--add-data "models:models" \
+		--add-data "utils:utils" \
+		--add-data "services:services" \
+		--add-data "config:config" \
+		--hidden-import="fastmcp" \
+		--hidden-import="jenkins" \
+		--hidden-import="pydantic" \
+		--hidden-import="requests" \
+		--hidden-import="numpy" \
+		--hidden-import="sklearn" \
+		--hidden-import="sklearn.ensemble" \
+		--hidden-import="sklearn.ensemble.IsolationForest" \
+		--hidden-import="sklearn.cluster" \
+		--hidden-import="sklearn.metrics" \
+		--hidden-import="sklearn.linear_model" \
+		--hidden-import="sklearn.neighbors" \
+		--hidden-import="sklearn.tree" \
+		--hidden-import="pandas" \
+		--hidden-import="plotly" \
+		--hidden-import="openai" \
+		--hidden-import="anthropic" \
+		--hidden-import="anyio" \
+		--hidden-import="click" \
+		--hidden-import="tenacity" \
+		--hidden-import="croniter" \
+		--hidden-import="uvicorn" \
+		--hidden-import="starlette" \
+		--hidden-import="fastapi" \
+		--hidden-import="httpx" \
+		--hidden-import="jinja2" \
+		--hidden-import="rich" \
+		--hidden-import="tabulate" \
+		--hidden-import="python-dateutil" \
+		--hidden-import="scipy" \
+		--hidden-import="importlib_metadata" \
+		--collect-all="fastmcp" \
+		--collect-all="importlib_metadata" \
+		server.py
+	@echo "$(BLUE)Cleaning up build artifacts...$(NC)"
+	rm -rf $(BUILD_DIR)
+	rm -f $(SPEC_FILE)
+	@echo "$(GREEN)✓ Linux AMD64 binary built successfully$(NC)"
+	@echo "$(YELLOW)Binary location: $(DIST_DIR)/$(BINARY_NAME)-linux-amd64$(NC)"
+
+# Build all platforms
+.PHONY: build-all
+build-all: build-macos-arm64 build-linux-amd64
+	@echo "$(GREEN)✓ All platform binaries built successfully$(NC)"
+	@echo "$(YELLOW)Binaries location: $(DIST_DIR)/$(NC)"
+	@ls -la $(DIST_DIR)/
 
 # Build development binary (with debug info)
 .PHONY: build-dev
@@ -211,61 +322,69 @@ release: clean check build package
 
 # Create GitHub release
 .PHONY: github-release
-github-release: build
+github-release: build-all
 	@echo "$(BLUE)Creating GitHub release...$(NC)"
 	@if [ -z "$(VERSION)" ]; then echo "$(RED)Error: VERSION is required. Use: make github-release VERSION=v1.0.0$(NC)"; exit 1; fi
-	@gh release create $(VERSION) dist/$(BINARY_NAME) \
+	@echo "$(BLUE)Creating release notes...$(NC)"
+	@echo "## 🚀 MCP Jenkins Intelligence Server $(VERSION)" > /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### ✨ Features" >> /tmp/release_notes.md
+	@echo "- **Self-contained binary executables** - no Python installation required" >> /tmp/release_notes.md
+	@echo "- **Multi-platform support** - macOS ARM64 and Linux AMD64" >> /tmp/release_notes.md
+	@echo "- **33 MCP tools** for comprehensive Jenkins pipeline analysis" >> /tmp/release_notes.md
+	@echo "- **Auto-configuration** using environment variables" >> /tmp/release_notes.md
+	@echo "- **AI-powered insights** and failure analysis" >> /tmp/release_notes.md
+	@echo "- **Jenkinsfile retrieval** with 100% accuracy" >> /tmp/release_notes.md
+	@echo "- **Security scanning** and vulnerability detection" >> /tmp/release_notes.md
+	@echo "- **Performance optimization** suggestions" >> /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### 🛠️ Installation" >> /tmp/release_notes.md
+	@echo "1. Download the appropriate binary for your platform from this release" >> /tmp/release_notes.md
+	@echo "2. Make it executable: \`chmod +x mcp-jenkins-server-<platform>\`" >> /tmp/release_notes.md
+	@echo "3. Configure your MCP client (Cursor/VSCode) to use the binary" >> /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### 📦 Available Binaries" >> /tmp/release_notes.md
+	@echo "- **\`mcp-jenkins-server-macos-arm64\`** - macOS Apple Silicon (M1/M2/M3)" >> /tmp/release_notes.md
+	@echo "- **\`mcp-jenkins-server-linux-amd64\`** - Linux AMD64 (Ubuntu, Debian, CentOS, etc.)" >> /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### 📋 MCP Configuration" >> /tmp/release_notes.md
+	@echo "\`\`\`json" >> /tmp/release_notes.md
+	@echo "{" >> /tmp/release_notes.md
+	@echo "  \"mcpServers\": {" >> /tmp/release_notes.md
+	@echo "    \"mcp-jenkins-intelligence\": {" >> /tmp/release_notes.md
+	@echo "      \"command\": \"/path/to/mcp-jenkins-server-<platform>\"," >> /tmp/release_notes.md
+	@echo "      \"args\": []," >> /tmp/release_notes.md
+	@echo "      \"env\": {" >> /tmp/release_notes.md
+	@echo "        \"JENKINS_URL\": \"https://your-jenkins-url\"," >> /tmp/release_notes.md
+	@echo "        \"JENKINS_USERNAME\": \"your-username\"," >> /tmp/release_notes.md
+	@echo "        \"JENKINS_TOKEN\": \"your-token\"" >> /tmp/release_notes.md
+	@echo "      }" >> /tmp/release_notes.md
+	@echo "    }" >> /tmp/release_notes.md
+	@echo "  }" >> /tmp/release_notes.md
+	@echo "}" >> /tmp/release_notes.md
+	@echo "\`\`\`" >> /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### 🔧 Available Tools" >> /tmp/release_notes.md
+	@echo "- **Core Tools**: List pipelines, get details, analyze health" >> /tmp/release_notes.md
+	@echo "- **Monitoring Tools**: Metrics, dependencies, queue monitoring" >> /tmp/release_notes.md
+	@echo "- **AI Tools**: Failure prediction, optimization suggestions" >> /tmp/release_notes.md
+	@echo "- **Security Tools**: Vulnerability scanning" >> /tmp/release_notes.md
+	@echo "- **Jenkinsfile Tools**: Retrieve and analyze Jenkinsfiles" >> /tmp/release_notes.md
+	@echo "- **Advanced Tools**: Reports, comparisons, anomaly detection" >> /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### 🏗️ Build Information" >> /tmp/release_notes.md
+	@echo "- **Platforms**: macOS ARM64, Linux AMD64" >> /tmp/release_notes.md
+	@echo "- **Python**: 3.13.7" >> /tmp/release_notes.md
+	@echo "- **Dependencies**: All included in binaries" >> /tmp/release_notes.md
+	@echo "- **Size**: ~73MB per binary" >> /tmp/release_notes.md
+	@echo "" >> /tmp/release_notes.md
+	@echo "### 📖 Documentation" >> /tmp/release_notes.md
+	@echo "See the README.md for detailed usage instructions and examples." >> /tmp/release_notes.md
+	@gh release create $(VERSION) dist/$(BINARY_NAME)-macos-arm64 dist/$(BINARY_NAME)-linux-amd64 \
 		--title "MCP Jenkins Intelligence Server $(VERSION)" \
-		--notes "## 🚀 MCP Jenkins Intelligence Server $(VERSION)
-
-### ✨ Features
-- **Self-contained binary executable** - no Python installation required
-- **33 MCP tools** for comprehensive Jenkins pipeline analysis
-- **Auto-configuration** using environment variables
-- **AI-powered insights** and failure analysis
-- **Jenkinsfile retrieval** with 100% accuracy
-- **Security scanning** and vulnerability detection
-- **Performance optimization** suggestions
-
-### 🛠️ Installation
-1. Download the binary from this release
-2. Make it executable: \`chmod +x mcp-jenkins-server\`
-3. Configure your MCP client (Cursor/VSCode) to use the binary
-
-### 📋 MCP Configuration
-\`\`\`json
-{
-  \"mcpServers\": {
-    \"mcp-jenkins-intelligence\": {
-      \"command\": \"/path/to/mcp-jenkins-server\",
-      \"args\": [],
-      \"env\": {
-        \"JENKINS_URL\": \"https://your-jenkins-url\",
-        \"JENKINS_USERNAME\": \"your-username\",
-        \"JENKINS_TOKEN\": \"your-token\"
-      }
-    }
-  }
-}
-\`\`\`
-
-### 🔧 Available Tools
-- **Core Tools**: List pipelines, get details, analyze health
-- **Monitoring Tools**: Metrics, dependencies, queue monitoring  
-- **AI Tools**: Failure prediction, optimization suggestions
-- **Security Tools**: Vulnerability scanning
-- **Jenkinsfile Tools**: Retrieve and analyze Jenkinsfiles
-- **Advanced Tools**: Reports, comparisons, anomaly detection
-
-### 🏗️ Build Information
-- **Platform**: macOS ARM64 (Apple Silicon)
-- **Python**: 3.13.7
-- **Dependencies**: All included in binary
-- **Size**: ~73MB
-
-### 📖 Documentation
-See the README.md for detailed usage instructions and examples."
-	@echo "$(GREEN)✓ GitHub release $(VERSION) created$(NC)"
+		--notes-file /tmp/release_notes.md
+	@rm -f /tmp/release_notes.md
+	@echo "$(GREEN)✓ GitHub release $(VERSION) created with multi-platform binaries$(NC)"
 
 # Install binary system-wide (requires sudo)
 .PHONY: install-binary

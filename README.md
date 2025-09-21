@@ -25,7 +25,10 @@ curl -fsSL https://raw.githubusercontent.com/heniv96/mcp-jenkins-intelligence/ma
 
 # Option 2: Manual download
 # Download from: https://github.com/heniv96/mcp-jenkins-intelligence/releases/latest
-# Make executable: chmod +x mcp-jenkins-server
+# Choose the appropriate binary for your platform:
+# - mcp-jenkins-server-macos-arm64 (macOS Apple Silicon)
+# - mcp-jenkins-server-linux-amd64 (Linux AMD64)
+# Make executable: chmod +x mcp-jenkins-server-<platform>
 ```
 
 ### ⚡ MCP Configuration
