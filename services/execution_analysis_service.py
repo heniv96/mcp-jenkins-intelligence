@@ -9,8 +9,8 @@ from fastmcp import Context
 from services.jenkins_service import JenkinsService
 
 
-class JenkinsfileService:
-    """Service for reconstructing and analyzing Jenkinsfile content."""
+class ExecutionAnalysisService:
+    """Service for reconstructing and analyzing Jenkinsfile content from Jenkins execution data."""
 
     def __init__(self, jenkins_service: JenkinsService):
         self.jenkins = jenkins_service

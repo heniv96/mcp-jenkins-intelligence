@@ -6,7 +6,7 @@ from typing import Any
 from fastmcp import Context
 
 from services.jenkins_service import JenkinsService
-from utils import parse_timestamp
+from utils import format_duration_seconds
 
 
 class AITools:
@@ -14,6 +14,27 @@ class AITools:
 
     def __init__(self, jenkins_service: JenkinsService):
         self.jenkins = jenkins_service
+
+    def _parse_timestamp(self, timestamp_str: str) -> datetime:
+        """Safely parse timestamp string to datetime object."""
+        if not timestamp_str:
+            return datetime.now()
+        
+        try:
+            # Handle different timestamp formats
+            if isinstance(timestamp_str, (int, float)):
+                return datetime.fromtimestamp(timestamp_str / 1000)
+            elif isinstance(timestamp_str, str):
+                # Try different formats
+                for fmt in ['%Y-%m-%dT%H:%M:%S.%fZ', '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S']:
+                    try:
+                        return datetime.strptime(timestamp_str, fmt)
+                    except ValueError:
+                        continue
+                # If all formats fail, return current time
+                return datetime.now()
+        except Exception:
+            return datetime.now()
 
     async def predict_pipeline_failure(self, pipeline_name: str, ctx: Context) -> dict[str, Any]:
         """AI prediction of likely pipeline failures based on patterns."""
@@ -63,9 +84,12 @@ class AITools:
 
             # Check build frequency (too frequent might indicate instability)
             if len(recent_builds) > 1:
-                time_span = (parse_timestamp(recent_builds[0].get("timestamp")) -
-                            parse_timestamp(recent_builds[-1].get("timestamp"))).total_seconds() / 3600
-                builds_per_hour = len(recent_builds) / time_span if time_span > 0 else 0
+                try:
+                    time_span = (self._parse_timestamp(recent_builds[0].get("timestamp")) -
+                                self._parse_timestamp(recent_builds[-1].get("timestamp"))).total_seconds() / 3600
+                    builds_per_hour = len(recent_builds) / time_span if time_span > 0 else 0
+                except Exception:
+                    builds_per_hour = 0
 
                 if builds_per_hour > 2:
                     risk_factors.append("Very high build frequency")
@@ -116,7 +140,7 @@ class AITools:
             suggestions = []
 
             # Analyze build duration
-            durations = [b.get("duration", 0) for b in builds if b.get("duration")]
+            durations = [format_duration_seconds(b.get("duration", 0)) for b in builds if b.get("duration")]
             if durations:
                 avg_duration = sum(durations) / len(durations)
                 max_duration = max(durations)
@@ -126,7 +150,7 @@ class AITools:
                         "category": "Performance",
                         "priority": "High",
                         "suggestion": "Consider parallelizing long-running steps or optimizing resource usage",
-                        "reason": f"Build duration varies significantly (avg: {avg_duration/1000:.1f}s, max: {max_duration/1000:.1f}s)"
+                        "reason": f"Build duration varies significantly (avg: {avg_duration:.1f}s, max: {max_duration:.1f}s)"
                     })
 
             # Analyze failure patterns
@@ -150,8 +174,11 @@ class AITools:
 
             # Check build frequency
             if len(builds) > 1:
-                time_span = (parse_timestamp(builds[0].get("timestamp")) -
-                            parse_timestamp(builds[-1].get("timestamp"))).total_seconds() / 3600
+                try:
+                    time_span = (self._parse_timestamp(builds[0].get("timestamp")) -
+                                self._parse_timestamp(builds[-1].get("timestamp"))).total_seconds() / 3600
+                except Exception:
+                    time_span = 1  # Default to 1 hour if parsing fails
                 builds_per_hour = len(builds) / time_span if time_span > 0 else 0
 
                 if builds_per_hour > 1:

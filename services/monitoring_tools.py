@@ -6,7 +6,7 @@ from typing import Any
 from fastmcp import Context
 
 from services.jenkins_service import JenkinsService
-from utils import parse_timestamp
+from utils import format_duration_seconds, parse_timestamp
 
 
 class MonitoringTools:
@@ -50,8 +50,8 @@ class MonitoringTools:
             success_rate = (successful_builds / total_builds) * 100 if total_builds > 0 else 0
             failure_rate = (failed_builds / total_builds) * 100 if total_builds > 0 else 0
 
-            # Calculate duration metrics
-            durations = [b.get("duration", 0) for b in recent_builds if b.get("duration")]
+            # Calculate duration metrics (convert from milliseconds to seconds)
+            durations = [format_duration_seconds(b.get("duration", 0)) for b in recent_builds if b.get("duration")]
             avg_duration = sum(durations) / len(durations) if durations else 0
             min_duration = min(durations) if durations else 0
             max_duration = max(durations) if durations else 0
@@ -84,9 +84,9 @@ class MonitoringTools:
                 "unstable_builds": unstable_builds,
                 "success_rate": round(success_rate, 2),
                 "failure_rate": round(failure_rate, 2),
-                "avg_duration_seconds": round(avg_duration / 1000, 2),
-                "min_duration_seconds": round(min_duration / 1000, 2),
-                "max_duration_seconds": round(max_duration / 1000, 2),
+                "avg_duration_seconds": round(avg_duration, 2),
+                "min_duration_seconds": round(min_duration, 2),
+                "max_duration_seconds": round(max_duration, 2),
                 "builds_per_day": round(builds_per_day, 2),
                 "analysis_date": datetime.now().isoformat()
             }

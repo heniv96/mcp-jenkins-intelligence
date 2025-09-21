@@ -16,6 +16,8 @@ from utils import (
     determine_priority,
     determine_trend,
     extract_error_message,
+    format_duration,
+    format_duration_seconds,
     generate_suggested_fixes,
     parse_timestamp,
 )
@@ -255,13 +257,9 @@ class CoreTools:
                     if timestamp is None and (detailed_build.get("timestamp") or build_data.get("timestamp")):
                         await ctx.warning(f"Build #{build_number} has invalid timestamp, but including with null timestamp...")
 
-                    # Get duration (convert from milliseconds to seconds if needed)
+                    # Get duration (Jenkins provides duration in milliseconds)
                     duration = detailed_build.get("duration") or build_data.get("duration")
-                    if duration and duration > 0:
-                        # Duration is typically in milliseconds, convert to seconds for display
-                        duration_seconds = duration / 1000 if duration > 1000 else duration
-                    else:
-                        duration_seconds = None
+                    duration_seconds = format_duration_seconds(duration) if duration else None
 
                     build = BuildInfo(
                         number=build_number,
@@ -334,8 +332,8 @@ class CoreTools:
             failure_rate = (failed_builds / total_builds) * 100
 
             # Calculate average duration
-            durations = [b.get("duration", 0) for b in recent_builds if b.get("duration")]
-            avg_duration = (sum(durations) / len(durations)) / 1000 if durations else 0  # Convert to seconds
+            durations = [format_duration_seconds(b.get("duration", 0)) for b in recent_builds if b.get("duration")]
+            avg_duration = sum(durations) / len(durations) if durations else 0
 
             # Determine trend
             trend = determine_trend(recent_builds)

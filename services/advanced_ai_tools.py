@@ -10,6 +10,8 @@ import numpy as np
 from fastmcp import Context
 from sklearn.ensemble import IsolationForest
 
+from utils import format_duration_seconds
+
 logger = logging.getLogger(__name__)
 
 
@@ -116,7 +118,7 @@ class AdvancedAITools:
         features = []
         for build in builds:
             # Extract features from build data
-            duration = build.get('duration', 0) / 1000 if build.get('duration') else 0  # Convert to seconds
+            duration = format_duration_seconds(build.get('duration', 0))  # Convert to seconds
             timestamp = build.get('timestamp', 0) / 1000 if build.get('timestamp') else 0  # Convert to seconds
             result = 1 if build.get('result') == 'SUCCESS' else 0
             number = build.get('number', 0)
@@ -242,8 +244,8 @@ class AdvancedAITools:
     def _describe_anomaly(self, build: dict, anomaly_type: str) -> str:
         """Generate human-readable description of anomaly."""
         descriptions = {
-            "unusually_long_build": f"Build #{build.get('number')} took unusually long ({build.get('duration', 0)/1000:.1f}s)",
-            "unusually_short_build": f"Build #{build.get('number')} completed unusually quickly ({build.get('duration', 0)/1000:.1f}s)",
+            "unusually_long_build": f"Build #{build.get('number')} took unusually long ({format_duration_seconds(build.get('duration', 0)):.1f}s)",
+            "unusually_short_build": f"Build #{build.get('number')} completed unusually quickly ({format_duration_seconds(build.get('duration', 0)):.1f}s)",
             "long_failed_build": f"Build #{build.get('number')} failed after running for a long time",
             "off_hours_build": f"Build #{build.get('number')} ran outside normal business hours",
             "weekend_build": f"Build #{build.get('number')} ran on weekend",
@@ -330,8 +332,8 @@ class AdvancedAITools:
             patterns["time_based"]["failure_hour_variance"] = np.var(failure_hours)
 
         # Duration-based patterns
-        failure_durations = [b.get('duration', 0) / 1000 for b in failed_builds if b.get('duration')]
-        success_durations = [b.get('duration', 0) / 1000 for b in successful_builds if b.get('duration')]
+        failure_durations = [format_duration_seconds(b.get('duration', 0)) for b in failed_builds if b.get('duration')]
+        success_durations = [format_duration_seconds(b.get('duration', 0)) for b in successful_builds if b.get('duration')]
 
         if failure_durations and success_durations:
             patterns["duration_based"]["avg_failure_duration"] = np.mean(failure_durations)
@@ -751,12 +753,12 @@ class AdvancedAITools:
             analysis["timing"]["hour_distribution"] = np.histogram(build_hours, bins=24)[0].tolist()
 
         # Duration analysis
-        durations = [b.get('duration', 0) for b in builds if b.get('duration')]
+        durations = [format_duration_seconds(b.get('duration', 0)) for b in builds if b.get('duration')]
         if durations:
-            analysis["duration"]["mean"] = np.mean(durations) / 1000
-            analysis["duration"]["std"] = np.std(durations) / 1000
-            analysis["duration"]["min"] = np.min(durations) / 1000
-            analysis["duration"]["max"] = np.max(durations) / 1000
+            analysis["duration"]["mean"] = np.mean(durations)
+            analysis["duration"]["std"] = np.std(durations)
+            analysis["duration"]["min"] = np.min(durations)
+            analysis["duration"]["max"] = np.max(durations)
 
         # Reliability analysis
         results = [b.get('result') for b in builds]
@@ -766,7 +768,7 @@ class AdvancedAITools:
 
         # Efficiency analysis
         if durations:
-            analysis["efficiency"]["throughput"] = len(builds) / (np.sum(durations) / (1000 * 60 * 60))  # builds per hour
+            analysis["efficiency"]["throughput"] = len(builds) / (np.sum(durations) / (60 * 60))  # builds per hour
             analysis["efficiency"]["consistency"] = 1 - (np.std(durations) / np.mean(durations)) if np.mean(durations) > 0 else 0
 
         return analysis

@@ -25,6 +25,35 @@ def parse_timestamp(timestamp: int | None) -> datetime | None:
         return None
 
 
+def format_duration(duration_ms: int | None) -> str:
+    """Format Jenkins build duration from milliseconds to human-readable format."""
+    if not duration_ms or duration_ms <= 0:
+        return "Unknown"
+    
+    # Convert milliseconds to seconds
+    total_seconds = duration_ms / 1000
+    
+    # Handle different time ranges
+    if total_seconds < 60:
+        return f"{total_seconds:.1f}s"
+    elif total_seconds < 3600:  # Less than 1 hour
+        minutes = int(total_seconds // 60)
+        seconds = int(total_seconds % 60)
+        return f"{minutes}m {seconds}s"
+    else:  # 1 hour or more
+        hours = int(total_seconds // 3600)
+        minutes = int((total_seconds % 3600) // 60)
+        seconds = int(total_seconds % 60)
+        return f"{hours}h {minutes}m {seconds}s"
+
+
+def format_duration_seconds(duration_ms: int | None) -> float:
+    """Convert Jenkins build duration from milliseconds to seconds."""
+    if not duration_ms or duration_ms <= 0:
+        return 0.0
+    return duration_ms / 1000
+
+
 def determine_trend(builds: list[dict[str, Any]]) -> str:
     """Determine if pipeline performance is improving, stable, or declining."""
     if len(builds) < 10:

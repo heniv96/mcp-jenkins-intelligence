@@ -7,6 +7,8 @@ from .helpers import (
     determine_priority,
     determine_trend,
     extract_error_message,
+    format_duration,
+    format_duration_seconds,
     generate_suggested_fixes,
     parse_timestamp,
 )
@@ -19,5 +21,7 @@ __all__ = [
     "determine_priority",
     "generate_suggested_fixes",
     "analyze_root_cause",
-    "answer_question"
+    "answer_question",
+    "format_duration",
+    "format_duration_seconds"
 ]
