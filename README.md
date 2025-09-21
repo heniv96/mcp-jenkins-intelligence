@@ -13,6 +13,45 @@
 > **The Jenkins Intelligence Platform**  
 > Transform your Jenkins operations with AI-powered natural language interfaces and comprehensive pipeline analysis.
 
+## 🚀 Quick Start (Binary Distribution)
+
+**Prefer a ready-to-use binary?** Download the latest release and start using MCP Jenkins Intelligence in seconds!
+
+### 📦 Download & Install
+
+```bash
+# Option 1: Use the installer script (recommended)
+curl -fsSL https://raw.githubusercontent.com/heniv96/mcp-jenkins-intelligence/main/install.sh | bash
+
+# Option 2: Manual download
+# Download from: https://github.com/heniv96/mcp-jenkins-intelligence/releases/latest
+# Make executable: chmod +x mcp-jenkins-server
+```
+
+### ⚡ MCP Configuration
+
+Add to your MCP client configuration (Cursor/VSCode):
+
+```json
+{
+  "mcpServers": {
+    "mcp-jenkins-intelligence": {
+      "command": "/path/to/mcp-jenkins-server",
+      "args": [],
+      "env": {
+        "JENKINS_URL": "https://your-jenkins-url",
+        "JENKINS_USERNAME": "your-username", 
+        "JENKINS_TOKEN": "your-token"
+      }
+    }
+  }
+}
+```
+
+**That's it!** No Python installation, no dependencies - just download and run! 🎉
+
+---
+
 ## Overview
 
 MCP Jenkins Intelligence is a comprehensive Model Context Protocol (MCP) solution designed for professional DevOps teams. It provides natural language interfaces for complex Jenkins pipeline operations, enabling teams to monitor, analyze, and optimize their CI/CD workflows through AI-powered conversations in VSCode and Cursor.
