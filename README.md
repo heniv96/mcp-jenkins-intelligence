@@ -218,7 +218,7 @@ The internal architecture follows a clean, modular design with separation of con
 
 ```
 mcp-jenkins-intelligence/
-├── server.py                 # Clean main server (559 lines)
+├── server.py                 # Main MCP server (679 lines)
 ├── models/
 │   ├── __init__.py
 │   └── pipeline.py          # Pydantic models
@@ -226,15 +226,15 @@ mcp-jenkins-intelligence/
 │   ├── __init__.py
 │   ├── jenkins_service.py   # Jenkins API wrapper
 │   ├── core_tools.py        # Core pipeline tools
-│   ├── control_tools.py     # Pipeline control tools
 │   ├── monitoring_tools.py  # Monitoring & analytics
 │   ├── ai_tools.py          # AI intelligence tools
 │   ├── security_tools.py    # Security & compliance
 │   ├── advanced_ai_tools.py # Advanced AI features
 │   ├── advanced_security_tools.py # Advanced security tools
 │   ├── analytics_tools.py   # Analytics & reporting
-│   ├── jenkinsfile_service.py # Jenkinsfile management
-│   └── performance_tools.py # Performance optimization
+│   ├── performance_tools.py # Performance optimization
+│   ├── execution_analysis_service.py # Execution analysis
+│   └── jenkinsfile_retrieval_service.py # Jenkinsfile management
 ├── resources/
 │   ├── __init__.py
 │   └── pipeline_resources.py # MCP resources
@@ -247,8 +247,20 @@ mcp-jenkins-intelligence/
 │   ├── __init__.py
 │   └── helpers.py           # Helper functions
 ├── manuals/
-│   └── examples/
-│       └── mcp-config-standalone.json # Example configuration
+│   ├── configuration/
+│   │   └── README.md        # Configuration guide
+│   ├── examples/
+│   │   └── mcp-config-standalone.json # Example configuration
+│   ├── quick-start/
+│   │   └── README.md        # Quick start guide
+│   └── troubleshooting/
+│       └── README.md        # Troubleshooting guide
+├── dist/                    # Built binaries (GitHub Releases)
+│   ├── mcp-jenkins-server-macos-arm64    # macOS Apple Silicon binary
+│   └── mcp-jenkins-server-linux-amd64    # Linux AMD64 binary
+├── install.sh               # Automated installer script
+├── Makefile                 # Build automation
+├── build.sh                 # Build test script
 ├── requirements.txt         # Python dependencies
 ├── pyproject.toml          # Project configuration
 ├── LICENSE                 # MIT License
@@ -275,10 +287,12 @@ mcp-jenkins-intelligence/
 - **Debugging**: Easier to isolate and fix issues
 
 #### **📊 Code Quality Metrics**
-- **Main Server**: 559 lines with clean modular architecture
-- **Total Codebase**: 4,768 lines across all Python files
+- **Main Server**: 679 lines with clean modular architecture
+- **Total Codebase**: ~5,000+ lines across all Python files
 - **Maintainability Index**: Significantly improved with modular design
 - **Cyclomatic Complexity**: Reduced per module through separation of concerns
+- **Binary Distribution**: Self-contained executables (~73MB each)
+- **Multi-Platform Support**: macOS ARM64 and Linux AMD64
 
 ## 🛠️ Available Tools
 
@@ -290,16 +304,7 @@ mcp-jenkins-intelligence/
 | **AI-Powered Analysis (1)** | `ask_pipeline_question` | Natural language queries and intelligent insights |
 | **Configuration Management (3)** | `configure_jenkins`, `test_connection`, `get_server_info` | Jenkins connection setup, validation, and server information |
 
-### **Pipeline Control Tools (4 Total) - ⚠️ Safety Confirmation Required**
-
-| Tool | Description | Safety Features |
-|------|-------------|-----------------|
-| `trigger_pipeline_build` | Trigger a new build with optional parameters | ⚠️ Requires `confirm=True` - explains impact before execution |
-| `stop_pipeline_build` | Stop a running pipeline build | ⚠️ Requires `confirm=True` - warns about potential consequences |
-| `enable_disable_pipeline` | Enable or disable a pipeline | ⚠️ Requires `confirm=True` - explains what will be affected |
-| `get_pipeline_config` | Get pipeline configuration (Jenkinsfile/XML) | ✅ Safe - read-only operation |
-
-**⚠️ Safety Note**: Only the Pipeline Control Tools require safety confirmations. All other tools are read-only or analysis-only operations that cannot modify Jenkins state.
+**✅ Safety Note**: All tools are read-only or analysis-only operations that cannot modify Jenkins state. This ensures safe operation without risk of accidentally triggering builds or changing pipeline configurations.
 
 ### **Monitoring & Analysis Tools (4 Total)**
 
